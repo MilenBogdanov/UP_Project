@@ -1,26 +1,25 @@
 package bg.tuvarna.devicebackend.services;
 
-import bg.tuvarna.devicebackend.controllers.execptions.CustomException;
-import bg.tuvarna.devicebackend.controllers.execptions.ErrorCode;
+import bg.tuvarna.devicebackend.controllers.exceptions.CustomException;
+import bg.tuvarna.devicebackend.controllers.exceptions.ErrorCode;
 import bg.tuvarna.devicebackend.models.dtos.ChangePasswordVO;
 import bg.tuvarna.devicebackend.models.dtos.UserCreateVO;
 import bg.tuvarna.devicebackend.models.dtos.UserUpdateVO;
+import bg.tuvarna.devicebackend.models.entities.Device;
 import bg.tuvarna.devicebackend.models.entities.User;
 import bg.tuvarna.devicebackend.models.enums.UserRole;
 import bg.tuvarna.devicebackend.repositories.UserRepository;
 import bg.tuvarna.devicebackend.utils.CustomPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +50,8 @@ class UserServiceTests {
         user.setFullName("Ivan");
         user.setPassword("encoded");
         user.setRole(UserRole.USER);
+        // важно: инициализираме празен списък с устройства
+        user.setDevices(new ArrayList<>());
     }
 
     // ---------- register() tests ----------
@@ -76,7 +77,7 @@ class UserServiceTests {
         when(userRepository.getByEmail(anyString())).thenReturn(null);
         when(userRepository.getByPhone(anyString())).thenReturn(null);
         when(passwordEncoder.encode("123")).thenReturn("encoded");
-        when(userRepository.save(any())).thenReturn(user);
+        when(userRepository.saveAndFlush(any())).thenReturn(user);
         doThrow(new CustomException("device error", ErrorCode.AlreadyExists))
                 .when(deviceService).alreadyExist(anyString());
 
@@ -90,9 +91,9 @@ class UserServiceTests {
         when(userRepository.getByEmail(anyString())).thenReturn(null);
         when(userRepository.getByPhone(anyString())).thenReturn(null);
         when(passwordEncoder.encode("123")).thenReturn("encoded");
-        when(userRepository.save(any())).thenReturn(user);
+        when(userRepository.saveAndFlush(any())).thenReturn(user);
         doNothing().when(deviceService).alreadyExist(anyString());
-        doNothing().when(deviceService).registerDevice(anyString(), any(), any());
+        when(deviceService.registerDevice(anyString(), any(), any())).thenReturn(new Device());
 
         userService.register(vo);
         verify(deviceService).registerDevice(eq("SN1"), any(), any());
@@ -164,8 +165,8 @@ class UserServiceTests {
         user.setRole(UserRole.ADMIN);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        UserUpdateVO vo = new UserUpdateVO(1L, "Name", "Addr", "Phone", "Mail");
-        assertThrows(CustomException.class, () -> userService.updateUser(vo));
+        UserUpdateVO vo = new UserUpdateVO("Name", "Addr", "Phone", "Mail");
+        assertThrows(CustomException.class, () -> userService.updateUser(1L, vo));
     }
 
     @Test
@@ -173,8 +174,8 @@ class UserServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.getByEmail("new@abv.bg")).thenReturn(new User());
 
-        UserUpdateVO vo = new UserUpdateVO(1L, "Ivan", "Addr", "0888", "new@abv.bg");
-        assertThrows(CustomException.class, () -> userService.updateUser(vo));
+        UserUpdateVO vo = new UserUpdateVO("Ivan", "Addr", "0888", "new@abv.bg");
+        assertThrows(CustomException.class, () -> userService.updateUser(1L, vo));
     }
 
     @Test
@@ -183,8 +184,8 @@ class UserServiceTests {
         when(userRepository.getByEmail(any())).thenReturn(null);
         when(userRepository.getByPhone("0999")).thenReturn(new User());
 
-        UserUpdateVO vo = new UserUpdateVO(1L, "Ivan", "Addr", "0999", "ivan@abv.bg");
-        assertThrows(CustomException.class, () -> userService.updateUser(vo));
+        UserUpdateVO vo = new UserUpdateVO("Ivan", "Addr", "0999", "ivan@abv.bg");
+        assertThrows(CustomException.class, () -> userService.updateUser(1L, vo));
     }
 
     @Test
@@ -193,8 +194,8 @@ class UserServiceTests {
         when(userRepository.getByEmail(any())).thenReturn(null);
         when(userRepository.getByPhone(any())).thenReturn(null);
 
-        UserUpdateVO vo = new UserUpdateVO(1L, "New", "Addr", "0888", "ivan@abv.bg");
-        userService.updateUser(vo);
+        UserUpdateVO vo = new UserUpdateVO("New", "Addr", "0888", "ivan@abv.bg");
+        userService.updateUser(1L, vo);
         verify(userRepository).save(any());
     }
 

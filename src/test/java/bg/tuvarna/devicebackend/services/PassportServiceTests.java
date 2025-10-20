@@ -1,8 +1,9 @@
 package bg.tuvarna.devicebackend.services;
 
-import bg.tuvarna.devicebackend.controllers.execptions.CustomException;
-import bg.tuvarna.devicebackend.controllers.execptions.ErrorCode;
-import bg.tuvarna.devicebackend.models.dtos.PassportVO;
+import bg.tuvarna.devicebackend.controllers.exceptions.CustomException;
+import bg.tuvarna.devicebackend.controllers.exceptions.ErrorCode;
+import bg.tuvarna.devicebackend.models.dtos.PassportCreateVO;
+import bg.tuvarna.devicebackend.models.dtos.PassportUpdateVO;
 import bg.tuvarna.devicebackend.models.entities.Passport;
 import bg.tuvarna.devicebackend.repositories.PassportRepository;
 import bg.tuvarna.devicebackend.utils.CustomPage;
@@ -36,71 +37,93 @@ class PassportServiceTests {
     }
 
     @Test
-    void save_ShouldCreateNewPassport_WhenNoOverlap() {
-        PassportVO vo = new PassportVO(
-                null, "Test Passport", "Model X", "AB",
-                24, 100, 200
+    void create_ShouldCreateNewPassport_WhenNoOverlap() {
+        PassportCreateVO vo = new PassportCreateVO(
+                "Test Passport", "Model X", "AB", 12, 100, 200
         );
+
         when(passportRepository.findByFromSerialNumberBetween("AB", 100, 200))
                 .thenReturn(Collections.emptyList());
 
         Passport mockPassport = new Passport();
         when(passportRepository.save(any(Passport.class))).thenReturn(mockPassport);
 
-        passportService.save(vo);
+        Passport result = passportService.create(vo);
 
         verify(passportRepository, times(1)).save(any(Passport.class));
+        assertNotNull(result);
     }
 
     @Test
-    void save_ShouldThrow_WhenNewPassportOverlaps() {
+    void create_ShouldThrow_WhenOverlapExists() {
         Passport existing = new Passport();
         when(passportRepository.findByFromSerialNumberBetween("AB", 100, 200))
                 .thenReturn(List.of(existing));
 
-        PassportVO vo = new PassportVO(
-                null, "Test Passport", "Model X", "AB",
-                24, 100, 200
+        PassportCreateVO vo = new PassportCreateVO(
+                "Test Passport", "Model X", "AB", 12, 100, 200
         );
-        CustomException ex = assertThrows(CustomException.class, () -> passportService.save(vo));
+
+        CustomException ex = assertThrows(CustomException.class, () -> passportService.create(vo));
         assertEquals("Serial number already exists", ex.getMessage());
+        assertEquals(ErrorCode.AlreadyExists, ex.getErrorCode());
     }
 
     @Test
-    void save_ShouldUpdateExistingPassport_WhenValid() {
+    void update_ShouldUpdateExistingPassport_WhenValid() {
         Passport existing = new Passport();
         existing.setId(1L);
+        existing.setSerialPrefix("AB");
+        existing.setFromSerialNumber(100);
+        existing.setToSerialNumber(200);
+
+        when(passportRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(passportRepository.findByFromSerialNumberBetween("AB", 100, 200))
                 .thenReturn(Collections.emptyList());
-        when(passportRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        PassportVO vo = new PassportVO(
-                1L, "Updated Name", "Updated Model", "AB",
-                12, 100, 200
+        PassportUpdateVO vo = new PassportUpdateVO(
+                "Updated Name", "Updated Model", "AB", 12, 100, 200
         );
-        passportService.save(vo);
+        when(passportRepository.save(existing)).thenReturn(existing);
+
+        Passport result = passportService.update(1L, vo);
 
         verify(passportRepository).save(existing);
+        assertEquals(existing, result);
     }
 
     @Test
-    void save_ShouldThrow_WhenUpdatingOverlappingDifferentId() {
+    void update_ShouldThrow_WhenPassportNotFound() {
+        when(passportRepository.findById(1L)).thenReturn(Optional.empty());
+
+        PassportUpdateVO vo = new PassportUpdateVO(
+                "Updated Name", "Updated Model", "AB", 12, 100, 200
+        );
+
+        CustomException ex = assertThrows(CustomException.class, () -> passportService.update(1L, vo));
+        assertEquals("Passport not found", ex.getMessage());
+        assertEquals(ErrorCode.EntityNotFound, ex.getErrorCode());
+    }
+
+    @Test
+    void update_ShouldThrow_WhenOverlappingDifferentId() {
         Passport existing = new Passport();
         existing.setId(1L);
+
         Passport overlapping = new Passport();
         overlapping.setId(2L);
 
+        when(passportRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(passportRepository.findByFromSerialNumberBetween("AB", 100, 200))
                 .thenReturn(List.of(overlapping));
-        when(passportRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        PassportVO vo = new PassportVO(
-                1L, "Updated Name", "Updated Model", "AB",
-                12, 100, 200
+        PassportUpdateVO vo = new PassportUpdateVO(
+                "Updated", "Model", "AB", 12, 100, 200
         );
 
-        CustomException ex = assertThrows(CustomException.class, () -> passportService.save(vo));
+        CustomException ex = assertThrows(CustomException.class, () -> passportService.update(1L, vo));
         assertEquals("Serial number already exists", ex.getMessage());
+        assertEquals(ErrorCode.AlreadyExists, ex.getErrorCode());
     }
 
     @Test
@@ -126,7 +149,6 @@ class PassportServiceTests {
         passport.setFromSerialNumber(100);
         passport.setToSerialNumber(200);
 
-        // Match the exact serialId passed to the service
         when(passportRepository.findByFromSerial("AB150")).thenReturn(List.of(passport));
 
         Passport result = passportService.findPassportBySerialId("AB150");
@@ -134,13 +156,12 @@ class PassportServiceTests {
     }
 
     @Test
-    void findPassportBySerialId_ShouldSkipInvalidNumberAndThrow() {
+    void findPassportBySerialId_ShouldThrow_WhenSerialNumberInvalid() {
         Passport passport = new Passport();
         passport.setSerialPrefix("AB");
         passport.setFromSerialNumber(100);
         passport.setToSerialNumber(200);
 
-        // Serial with invalid number
         when(passportRepository.findByFromSerial("ABX")).thenReturn(List.of(passport));
 
         CustomException ex = assertThrows(CustomException.class, () ->
@@ -155,7 +176,6 @@ class PassportServiceTests {
         passport.setFromSerialNumber(100);
         passport.setToSerialNumber(200);
 
-        // Serial number outside range
         when(passportRepository.findByFromSerial("AB999")).thenReturn(List.of(passport));
 
         CustomException ex = assertThrows(CustomException.class,
@@ -199,5 +219,6 @@ class PassportServiceTests {
         doThrow(new RuntimeException("DB error")).when(passportRepository).deleteById(10L);
         CustomException ex = assertThrows(CustomException.class, () -> passportService.delete(10L));
         assertEquals("Can't delete passport", ex.getMessage());
+        assertEquals(ErrorCode.Failed, ex.getErrorCode());
     }
 }

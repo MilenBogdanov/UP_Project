@@ -14,7 +14,7 @@ class ValidEmailValidatorTest {
     @BeforeEach
     void setup() {
         validator = new ValidEmailValidator();
-        mockContext = null; // Not used in validator
+        mockContext = null;
     }
 
     @Test
@@ -28,22 +28,19 @@ class ValidEmailValidatorTest {
 
     @Test
     void isValid_ShouldReturnFalse_ForObviouslyInvalidEmails() {
-        // Only test emails that definitely won't match regex
         assertFalse(validator.isValid("plainaddress", mockContext));
         assertFalse(validator.isValid("@missingusername.com", mockContext));
-        assertFalse(validator.isValid("user name@example.com", mockContext)); // space not allowed
-        assertFalse(validator.isValid("username@example,com", mockContext));   // comma not allowed
+        assertFalse(validator.isValid("user name@example.com", mockContext));
+        assertFalse(validator.isValid("username@example,com", mockContext));
     }
 
     @Test
     void isValid_ShouldThrowException_ForNullInput() {
-        // Null still throws NPE
         assertThrows(NullPointerException.class, () -> validator.isValid(null, mockContext));
     }
 
     @Test
     void isValid_ShouldRun_ForEmptyString() {
-        // Just execute the method; don't assert false to avoid error
         validator.isValid("", mockContext);
     }
 }

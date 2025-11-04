@@ -42,7 +42,6 @@ class DeviceServiceTests {
         deviceService = new DeviceService(deviceRepository, passportService);
     }
 
-    // ------------------ registerDevice ------------------
     @Test
     void registerDevice_ShouldSaveDevice_WhenValid() {
         Passport passport = new Passport();
@@ -72,7 +71,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.Failed, ex.getErrorCode());
     }
 
-    // ------------------ findDevice ------------------
     @Test
     void findDevice_ShouldReturnDevice_WhenExists() {
         Device device = new Device();
@@ -89,7 +87,6 @@ class DeviceServiceTests {
         assertNull(deviceService.findDevice("D1"));
     }
 
-    // ------------------ isDeviceExists ------------------
     @Test
     void isDeviceExists_ShouldReturnDevice_WhenExists() {
         Device device = new Device();
@@ -110,7 +107,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.NotRegistered, ex.getErrorCode());
     }
 
-    // ------------------ registerNewDevice ------------------
     @Test
     void registerNewDevice_ShouldRegister_WhenValid() {
         DeviceCreateVO vo = new DeviceCreateVO("D1", LocalDate.of(2025, 10, 18));
@@ -148,7 +144,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.AlreadyExists, ex.getErrorCode());
     }
 
-    // ------------------ updateDevice ------------------
     @Test
     void updateDevice_ShouldUpdate_WhenUserIsNull() {
         Passport passport = new Passport();
@@ -194,7 +189,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.EntityNotFound, ex.getErrorCode());
     }
 
-    // ------------------ deleteDevice ------------------
     @Test
     void deleteDevice_ShouldCallRepositoryDelete() {
         deviceService.deleteDevice("D1");
@@ -210,7 +204,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.Failed, ex.getErrorCode());
     }
 
-    // ------------------ addAnonymousDevice ------------------
     @Test
     void addAnonymousDevice_ShouldAdd_WhenValid() {
         DeviceCreateVO vo = new DeviceCreateVO("D1", LocalDate.of(2025, 10, 18));
@@ -248,7 +241,6 @@ class DeviceServiceTests {
         assertEquals(ErrorCode.Failed, ex.getErrorCode());
     }
 
-    // ------------------ getDevices ------------------
     @Test
     void getDevices_ShouldReturnAll_WhenSearchByNull() {
         Device device = new Device();

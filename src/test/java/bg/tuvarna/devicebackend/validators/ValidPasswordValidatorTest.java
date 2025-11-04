@@ -42,8 +42,6 @@ class ValidPasswordValidatorTest {
 
     @Test
     void isValid_ShouldReturnFalse_ForNullOrEmpty() {
-        // Currently will throw NPE, so we need to modify validator for null safety
-        // For now, just check empty string
         assertThrows(NullPointerException.class, () -> validator.isValid(null, null));
         assertFalse(validator.isValid("", null));
     }

@@ -35,7 +35,6 @@ class UserRepositoryTests {
                 .build();
         userRepository.save(user);
 
-        // втори потребител, който е ADMIN
         User admin = User.builder()
                 .fullName("Admin User")
                 .email("admin@site.com")
@@ -98,7 +97,6 @@ class UserRepositoryTests {
     @DisplayName("searchBy → връща всички когато searchBy е null")
     void searchBy_ShouldReturnAll_WhenNull() {
         Page<User> page = userRepository.searchBy(null, Pageable.ofSize(10));
-        // връща само не-ADMIN потребители
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
 

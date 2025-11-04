@@ -1,5 +1,6 @@
 package bg.tuvarna.devicebackend.controllers;
 
+import bg.tuvarna.devicebackend.models.dtos.DeviceVO;
 import bg.tuvarna.devicebackend.models.dtos.RenovationCreateVO;
 import bg.tuvarna.devicebackend.models.dtos.RenovationVO;
 import bg.tuvarna.devicebackend.models.entities.Renovation;
@@ -13,10 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController

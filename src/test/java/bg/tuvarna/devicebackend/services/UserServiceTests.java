@@ -54,7 +54,6 @@ class UserServiceTests {
         user.setDevices(new ArrayList<>());
     }
 
-    // ---------- register() tests ----------
 
     @Test
     void register_ShouldThrow_WhenEmailTaken() {
@@ -99,7 +98,6 @@ class UserServiceTests {
         verify(deviceService).registerDevice(eq("SN1"), any(), any());
     }
 
-    // ---------- isEmailTaken / isPhoneTaken ----------
 
     @Test
     void isEmailTaken_ShouldReturnTrue_WhenExists() {
@@ -113,7 +111,6 @@ class UserServiceTests {
         assertFalse(userService.isPhoneTaken("123"));
     }
 
-    // ---------- getUserById / getUserByUsername ----------
 
     @Test
     void getUserById_ShouldReturnUser() {
@@ -141,7 +138,6 @@ class UserServiceTests {
         assertThrows(CustomException.class, () -> userService.getUserByUsername("ivan"));
     }
 
-    // ---------- getUsers() ----------
 
     @Test
     void getUsers_ShouldReturnSearchResults() {
@@ -158,7 +154,6 @@ class UserServiceTests {
         assertEquals(1, page.getTotalItems());
     }
 
-    // ---------- updateUser() ----------
 
     @Test
     void updateUser_ShouldThrow_WhenAdmin() {
@@ -199,7 +194,6 @@ class UserServiceTests {
         verify(userRepository).save(any());
     }
 
-    // ---------- updatePassword() ----------
 
     @Test
     void updatePassword_ShouldThrow_WhenAdmin() {

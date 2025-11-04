@@ -84,11 +84,9 @@ class RenovationRepositoryTest {
         Long id = renovation.getId();
         assertThat(renovationRepository.existsById(id)).isTrue();
 
-        // Изтриване по обект
         renovationRepository.delete(renovation);
         assertThat(renovationRepository.existsById(id)).isFalse();
 
-        // Създаваме нов запис и изтриваме по ID
         Renovation another = new Renovation();
         another.setDescription("Second Delete");
         another.setRenovationDate(LocalDate.now());

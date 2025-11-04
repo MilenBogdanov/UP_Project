@@ -39,7 +39,6 @@ class RenovationServiceTests {
 
     @Test
     void save_ShouldCreateRenovationSuccessfully() {
-        // Arrange
         RenovationCreateVO vo = new RenovationCreateVO(
                 "SN-001",
                 "Changed filter",
@@ -50,10 +49,8 @@ class RenovationServiceTests {
         when(renovationRepository.save(any(Renovation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
         renovationService.save(vo);
 
-        // Assert
         ArgumentCaptor<Renovation> captor = ArgumentCaptor.forClass(Renovation.class);
         verify(renovationRepository, times(1)).save(captor.capture());
         Renovation saved = captor.getValue();
@@ -74,7 +71,6 @@ class RenovationServiceTests {
         when(deviceService.isDeviceExists("SN-002")).thenReturn(device);
         renovationService.save(vo);
 
-        // Проверяваме, че deviceService е извикан ПРЕДИ записването
         verify(deviceService, times(1)).isDeviceExists("SN-002");
         verify(renovationRepository, times(1)).save(any(Renovation.class));
     }
